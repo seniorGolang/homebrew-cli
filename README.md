@@ -8,7 +8,7 @@
 
 ```bash
 # Добавить tap (только один раз)
-brew tap seniorGolang/tg
+brew tap seniorGolang/cli
 
 # Установить tg (после tap можно использовать короткую команду)
 brew install tg
@@ -19,10 +19,10 @@ brew install tg
 Если не хотите добавлять tap, можно установить напрямую:
 
 ```bash
-brew install seniorGolang/tg/tg
+brew install seniorGolang/cli/tg
 ```
 
-**Примечание:** После добавления tap (`brew tap seniorGolang/tg`) вы можете использовать короткую команду `brew install tg` для всех последующих установок и обновлений.
+**Примечание:** После добавления tap (`brew tap seniorGolang/cli`) вы можете использовать короткую команду `brew install tg` для всех последующих установок и обновлений.
 
 ## Обновление
 
