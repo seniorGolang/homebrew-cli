@@ -100,6 +100,15 @@ jobs:
           version_num = version.sub(/^v/, '')
           repository = ENV['REPOSITORY']
 
+          # Обновляем или добавляем поле version
+          if content.match(/^\s*version\s+"[^"]+"/)
+            # Если поле version уже есть, обновляем его значение
+            content.gsub!(/^\s*version\s+"[^"]+"/, "  version \"#{version_num}\"")
+          else
+            # Если поля version нет, добавляем его после license
+            content.gsub!(/(license\s+"[^"]+")\s*\n/, "\\1\n  version \"#{version_num}\"\n")
+          end
+
           # Обновляем URL для всех платформ
           content.gsub!(/url "https:\/\/github\.com\/[^"]+darwin_arm64[^"]+"/, 
             "url \"https://github.com/#{repository}/releases/download/#{version}/tg_#{version_num}_darwin_arm64.tar.gz\"")
@@ -144,6 +153,12 @@ jobs:
 
           if ! grep -q "sha256 \"${LINUX_ARM64_SHA256}\"" Formula/tg.rb; then
             echo "Ошибка: не удалось обновить SHA256 для linux_arm64"
+            exit 1
+          fi
+
+          # Проверяем, что поле version обновлено
+          if ! grep -q "version \"${VERSION_NUM}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить version до ${VERSION_NUM}"
             exit 1
           fi
 

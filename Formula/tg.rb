@@ -9,6 +9,7 @@ class Tg < Formula
   desc "Tool Gateway - расширяемая платформа для выполнения задач через плагины"
   homepage "https://github.com/seniorGolang/tg"
   license "MIT"
+  version "3.0.1-pre"
 
   on_macos do
     if Hardware::CPU.arm?
