@@ -9,25 +9,25 @@ class Tg < Formula
   desc "Tool Gateway - расширяемая платформа для выполнения задач через плагины"
   homepage "https://github.com/seniorGolang/tg"
   license "MIT"
-  version "3.0.2-pre"
+  version "3.0.3-pre"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/seniorGolang/tg/releases/download/v3.0.2-pre/tg_3.0.2-pre_darwin_arm64.tar.gz"
-      sha256 "84c9a7a677481d3ff66986afa1506d69d608e1d3814755505a1c48d187151bb4"
+      url "https://github.com/seniorGolang/tg/releases/download/v3.0.3-pre/tg_3.0.3-pre_darwin_arm64.tar.gz"
+      sha256 "f55c5370f67d7696cb4727823239716e93520aa589c879b1d398cadf6d922df0"
     else
-      url "https://github.com/seniorGolang/tg/releases/download/v3.0.2-pre/tg_3.0.2-pre_darwin_amd64.tar.gz"
-      sha256 "a4d88410fb81ed45fd4a58c81d32869e6725d52d870cc2ce0cd8896488d70fc4"
+      url "https://github.com/seniorGolang/tg/releases/download/v3.0.3-pre/tg_3.0.3-pre_darwin_amd64.tar.gz"
+      sha256 "c71398a846e9ac362ba2eced61bd3f346359139ab0030171219d080364a84005"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/seniorGolang/tg/releases/download/v3.0.2-pre/tg_3.0.2-pre_linux_arm64.tar.gz"
-      sha256 "5c66fc5c1804e4f80521e2304a39412a00455ac1bebdf313932f0f87297cfa4e"
+      url "https://github.com/seniorGolang/tg/releases/download/v3.0.3-pre/tg_3.0.3-pre_linux_arm64.tar.gz"
+      sha256 "260c6ef27b96f8d42be94b79d500da9e9c08058b8ac531c4eecaf9dc74dc61a0"
     else
-      url "https://github.com/seniorGolang/tg/releases/download/v3.0.2-pre/tg_3.0.2-pre_linux_amd64.tar.gz"
-      sha256 "c93c4391a3ea320e3d8100b81f6d024384f26fbf2374ae1b6fffd6510df9795d"
+      url "https://github.com/seniorGolang/tg/releases/download/v3.0.3-pre/tg_3.0.3-pre_linux_amd64.tar.gz"
+      sha256 "ee6fb78de5d52d4ce5442a24e54a25cf3e74fe3ef38acd4260945aba47082531"
     end
   end
 
