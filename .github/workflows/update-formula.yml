@@ -1,0 +1,190 @@
+name: Update Formula
+
+# Этот workflow автоматически обновляет формулу при создании релиза в основном репозитории.
+# Может быть запущен автоматически через repository_dispatch или вручную через workflow_dispatch.
+
+on:
+  repository_dispatch:
+    types: [release-created]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Версия релиза (например, v1.0.1)'
+        required: true
+      darwin_arm64_sha256:
+        description: 'SHA256 хеш для darwin_arm64'
+        required: true
+      darwin_amd64_sha256:
+        description: 'SHA256 хеш для darwin_amd64'
+        required: true
+      linux_amd64_sha256:
+        description: 'SHA256 хеш для linux_amd64'
+        required: true
+      linux_arm64_sha256:
+        description: 'SHA256 хеш для linux_arm64'
+        required: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract version and SHA256
+        id: extract
+        run: |
+          if [ "${{ github.event_name }}" = "repository_dispatch" ]; then
+            # Данные из repository_dispatch
+            VERSION="${{ github.event.client_payload.version }}"
+            DARWIN_ARM64_SHA256="${{ github.event.client_payload.darwin_arm64_sha256 }}"
+            DARWIN_AMD64_SHA256="${{ github.event.client_payload.darwin_amd64_sha256 }}"
+            LINUX_AMD64_SHA256="${{ github.event.client_payload.linux_amd64_sha256 }}"
+            LINUX_ARM64_SHA256="${{ github.event.client_payload.linux_arm64_sha256 }}"
+            REPOSITORY="${{ github.event.client_payload.repository }}"
+          else
+            # Данные из workflow_dispatch (для ручного запуска)
+            VERSION="${{ github.event.inputs.version }}"
+            DARWIN_ARM64_SHA256="${{ github.event.inputs.darwin_arm64_sha256 }}"
+            DARWIN_AMD64_SHA256="${{ github.event.inputs.darwin_amd64_sha256 }}"
+            LINUX_AMD64_SHA256="${{ github.event.inputs.linux_amd64_sha256 }}"
+            LINUX_ARM64_SHA256="${{ github.event.inputs.linux_arm64_sha256 }}"
+            REPOSITORY="seniorGolang/tg"
+          fi
+
+          if [ -z "$VERSION" ]; then
+            echo "Ошибка: версия обязательна"
+            exit 1
+          fi
+
+          if [ -z "$DARWIN_ARM64_SHA256" ] || [ -z "$DARWIN_AMD64_SHA256" ] || [ -z "$LINUX_AMD64_SHA256" ] || [ -z "$LINUX_ARM64_SHA256" ]; then
+            echo "Ошибка: SHA256 для всех платформ обязательны"
+            exit 1
+          fi
+
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "darwin_arm64_sha256=${DARWIN_ARM64_SHA256}" >> $GITHUB_OUTPUT
+          echo "darwin_amd64_sha256=${DARWIN_AMD64_SHA256}" >> $GITHUB_OUTPUT
+          echo "linux_amd64_sha256=${LINUX_AMD64_SHA256}" >> $GITHUB_OUTPUT
+          echo "linux_arm64_sha256=${LINUX_ARM64_SHA256}" >> $GITHUB_OUTPUT
+          echo "repository=${REPOSITORY}" >> $GITHUB_OUTPUT
+
+          echo "Version: ${VERSION}"
+          echo "Darwin ARM64 SHA256: ${DARWIN_ARM64_SHA256}"
+          echo "Darwin AMD64 SHA256: ${DARWIN_AMD64_SHA256}"
+          echo "Linux AMD64 SHA256: ${LINUX_AMD64_SHA256}"
+          echo "Linux ARM64 SHA256: ${LINUX_ARM64_SHA256}"
+          echo "Repository: ${REPOSITORY}"
+
+      - name: Update formula
+        run: |
+          VERSION="${{ steps.extract.outputs.version }}"
+          VERSION_NUM="${VERSION#v}"
+          DARWIN_ARM64_SHA256="${{ steps.extract.outputs.darwin_arm64_sha256 }}"
+          DARWIN_AMD64_SHA256="${{ steps.extract.outputs.darwin_amd64_sha256 }}"
+          LINUX_AMD64_SHA256="${{ steps.extract.outputs.linux_amd64_sha256 }}"
+          LINUX_ARM64_SHA256="${{ steps.extract.outputs.linux_arm64_sha256 }}"
+          REPOSITORY="${{ steps.extract.outputs.repository }}"
+
+          # Используем Ruby для обновления формулы
+          export VERSION DARWIN_ARM64_SHA256 DARWIN_AMD64_SHA256 LINUX_AMD64_SHA256 LINUX_ARM64_SHA256 REPOSITORY
+          ruby << 'RUBY_SCRIPT'
+          file_path = "Formula/tg.rb"
+          content = File.read(file_path)
+
+          version = ENV['VERSION']
+          version_num = version.sub(/^v/, '')
+          repository = ENV['REPOSITORY']
+
+          # Обновляем или добавляем поле version
+          if content.match(/^\s*version\s+"[^"]+"/)
+            # Если поле version уже есть, обновляем его значение
+            content.gsub!(/^\s*version\s+"[^"]+"/, "  version \"#{version_num}\"")
+          else
+            # Если поля version нет, добавляем его после license
+            content.gsub!(/(license\s+"[^"]+")\s*\n/, "\\1\n  version \"#{version_num}\"\n")
+          end
+
+          # Обновляем URL для всех платформ
+          content.gsub!(/url "https:\/\/github\.com\/[^"]+darwin_arm64[^"]+"/, 
+            "url \"https://github.com/#{repository}/releases/download/#{version}/tg_#{version_num}_darwin_arm64.tar.gz\"")
+          content.gsub!(/url "https:\/\/github\.com\/[^"]+darwin_amd64[^"]+"/, 
+            "url \"https://github.com/#{repository}/releases/download/#{version}/tg_#{version_num}_darwin_amd64.tar.gz\"")
+          content.gsub!(/url "https:\/\/github\.com\/[^"]+linux_arm64[^"]+"/, 
+            "url \"https://github.com/#{repository}/releases/download/#{version}/tg_#{version_num}_linux_arm64.tar.gz\"")
+          content.gsub!(/url "https:\/\/github\.com\/[^"]+linux_amd64[^"]+"/, 
+            "url \"https://github.com/#{repository}/releases/download/#{version}/tg_#{version_num}_linux_amd64.tar.gz\"")
+
+          # Обновляем SHA256 для каждой платформы
+          content.gsub!(/(url "https:\/\/github\.com\/[^"]+darwin_arm64[^"]+")\s*\n\s*sha256 "[^"]+"/, 
+            "\\1\n      sha256 \"#{ENV['DARWIN_ARM64_SHA256']}\"")
+          content.gsub!(/(url "https:\/\/github\.com\/[^"]+darwin_amd64[^"]+")\s*\n\s*sha256 "[^"]+"/, 
+            "\\1\n      sha256 \"#{ENV['DARWIN_AMD64_SHA256']}\"")
+          content.gsub!(/(url "https:\/\/github\.com\/[^"]+linux_arm64[^"]+")\s*\n\s*sha256 "[^"]+"/, 
+            "\\1\n      sha256 \"#{ENV['LINUX_ARM64_SHA256']}\"")
+          content.gsub!(/(url "https:\/\/github\.com\/[^"]+linux_amd64[^"]+")\s*\n\s*sha256 "[^"]+"/, 
+            "\\1\n      sha256 \"#{ENV['LINUX_AMD64_SHA256']}\"")
+
+          # Обновляем homepage
+          content.gsub!(/homepage "[^"]+"/, "homepage \"https://github.com/#{repository}\"")
+
+          File.write(file_path, content)
+          RUBY_SCRIPT
+
+          # Проверяем, что все SHA256 обновлены
+          if ! grep -q "sha256 \"${DARWIN_ARM64_SHA256}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить SHA256 для darwin_arm64"
+            exit 1
+          fi
+
+          if ! grep -q "sha256 \"${DARWIN_AMD64_SHA256}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить SHA256 для darwin_amd64"
+            exit 1
+          fi
+
+          if ! grep -q "sha256 \"${LINUX_AMD64_SHA256}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить SHA256 для linux_amd64"
+            exit 1
+          fi
+
+          if ! grep -q "sha256 \"${LINUX_ARM64_SHA256}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить SHA256 для linux_arm64"
+            exit 1
+          fi
+
+          # Проверяем, что поле version обновлено
+          if ! grep -q "version \"${VERSION_NUM}\"" Formula/tg.rb; then
+            echo "Ошибка: не удалось обновить version до ${VERSION_NUM}"
+            exit 1
+          fi
+
+          # Проверяем изменения
+          echo "Изменения в формуле:"
+          git diff Formula/tg.rb || true
+
+      - name: Validate formula
+        run: |
+          # Проверяем синтаксис формулы
+          if command -v brew &> /dev/null; then
+            brew style Formula/tg.rb || echo "Warning: brew style check failed (brew may not be installed in CI)"
+          else
+            echo "Warning: brew not installed, skipping style check"
+          fi
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Formula/tg.rb
+
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита"
+            exit 0
+          fi
+
+          git commit -m "Update tg to ${{ steps.extract.outputs.version }}"
+          git push
