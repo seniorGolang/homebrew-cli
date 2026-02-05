@@ -14,20 +14,20 @@ class Tg < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/seniorGolang/tg/releases/download/v3.0.0/tg_3.0.0_darwin_arm64.tar.gz"
-      sha256 "b31429e0a4bcdaae5ee265bf1513b5e578edca46f03e5a44ed1dba7a274a6187"
+      sha256 "4aec2b5145464f180130a2ac6e9b0f1642e79d781777d5258f8f9c35d546ced4"
     else
       url "https://github.com/seniorGolang/tg/releases/download/v3.0.0/tg_3.0.0_darwin_amd64.tar.gz"
-      sha256 "d49f710edc7208c0acb004ded6feb191f7c6a6040f3841aed0678ca9057d2bbe"
+      sha256 "1833f95d842e3857899ef5ae80ab5cc6e59959e5c99cb7089528cc7d45acce2f"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
       url "https://github.com/seniorGolang/tg/releases/download/v3.0.0/tg_3.0.0_linux_arm64.tar.gz"
-      sha256 "c3455d8dd873fbbfd5e52e34446dd2cda3d0016f19712e5f6dd54a60c29b8174"
+      sha256 "ba14ee7071206ecc618f6c6f6ff696b055703876b79658c8f88fc859d5679c36"
     else
       url "https://github.com/seniorGolang/tg/releases/download/v3.0.0/tg_3.0.0_linux_amd64.tar.gz"
-      sha256 "aa2ce3d9b9b8d69ab2a8df9173b955186e06c10a63e69c2c7f296b5972cbef00"
+      sha256 "45bffc1889c40f7b3ed5d532d1892911dc2b9ba955adca22abe0cc37e5effe4e"
     end
   end
 
